@@ -138,7 +138,7 @@ if uploaded_file:
 
         # Get dominant color in RGB
         dom_bgr = get_dominant_color(img_bgr)
-        dom_rgb = dom_bgr[::-1]  # Flip BGR list to RGB
+        dom_rgb = list(reversed(dom_bgr))  # Flip BGR list to RGB
 
         color_name = match_color_name(dom_rgb)
 

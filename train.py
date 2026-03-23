@@ -54,6 +54,40 @@ model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accur
 print("Starting training...")
 model.fit(train_generator, validation_data=val_generator, epochs=5)
 
+# ==========================================
+# PHASE 2: FINE-TUNING
+# ==========================================
+print("\nStarting Phase 2: Fine-Tuning...")
+
+# 1. Unfreeze the base model
+base_model.trainable = True
+
+# 2. Let's see how many layers are in the base model
+print("Number of layers in the base model: ", len(base_model.layers))
+
+# 3. Fine-tune from this layer onwards (Leave the first 100 layers frozen)
+fine_tune_at = 100
+
+# Freeze all the layers before the `fine_tune_at` layer
+for layer in base_model.layers[:fine_tune_at]:
+    layer.trainable = False
+
+# 4. Re-compile the model (CRITICAL: Use a much lower learning rate!)
+from tensorflow.keras.optimizers import Adam
+model.compile(optimizer=Adam(learning_rate=1e-5),  # Tiny learning rate
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+# 5. Continue training for a few more epochs
+fine_tune_epochs = 5
+total_epochs = 5 + fine_tune_epochs
+
+model.fit(train_generator, 
+          validation_data=val_generator, 
+          epochs=total_epochs, 
+          initial_epoch=5)  # Start from epoch 5
+# ==========================================
+
 # 4. Save Model
 model.save(MODEL_NAME)
 print(f"Model saved as {MODEL_NAME}")
