@@ -1,0 +1,103 @@
+import cv2
+import numpy as np
+from sklearn.cluster import KMeans
+import tensorflow as tf
+
+
+# -------------------------------
+# Convert RGB to Color Name
+# -------------------------------
+def get_color_name(rgb_color):
+
+    hsv = cv2.cvtColor(
+        np.uint8([[rgb_color]]),
+        cv2.COLOR_RGB2HSV
+    )[0][0]
+
+    h, s, v = hsv
+
+    if v < 50:
+        return "Black"
+    if s < 40 and v > 200:
+        return "White"
+    if s < 40:
+        return "Gray"
+
+    if h < 10 or h > 170:
+        if s > 150:
+            return "Red"
+        else:
+            return "Pink"
+    elif 10 <= h < 18:
+        return "Orange"
+    elif 18 <= h < 35:
+        return "Yellow"
+    elif 35 <= h < 85:
+        return "Green"
+    elif 85 <= h < 125:
+        return "Blue"
+    elif 125 <= h < 160:
+        return "Purple"
+    else:
+        return "Pink"
+
+
+# -------------------------------
+# Detect Flower Color (Improved)
+# -------------------------------
+def detect_flower_color(image_path):
+
+    image = cv2.imread(image_path)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image = cv2.resize(image, (224,224))
+
+    # Convert to HSV
+    hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+
+    # Remove black pixels (background removed)
+    pixels = image.reshape((-1,3))
+    pixels = pixels[np.any(pixels != [0,0,0], axis=1)]
+
+    # If too few pixels, fallback to original image
+    if len(pixels) < 50:
+        pixels = image.reshape((-1,3))
+
+    hsv_pixels = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    hsv_pixels = hsv_pixels.reshape((-1,3))
+
+    mask = (hsv_pixels[:,1] > 50) & (hsv_pixels[:,2] > 50)
+    pixels = image.reshape((-1,3))[mask]
+
+
+    # Apply KMeans
+    kmeans = KMeans(n_clusters=3, n_init=10)
+    kmeans.fit(pixels)
+
+    colors = kmeans.cluster_centers_
+    labels = kmeans.labels_
+    counts = np.bincount(labels)
+
+    best_color = None
+    max_saturation = 0
+
+    for center in colors.astype(int):
+        hsv = cv2.cvtColor(
+            np.uint8([[center]]),
+            cv2.COLOR_RGB2HSV
+        )[0][0]
+
+        h, s, v = hsv
+
+        if s > max_saturation:
+            max_saturation = s
+            best_color = center
+
+    dominant_color = best_color
+
+
+    color_name = get_color_name(dominant_color)
+
+    print("\n===== COLOR DETECTION RESULT =====")
+    print("Dominant RGB:", dominant_color)
+    print("Detected Flower Color:", color_name)
+

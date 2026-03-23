@@ -1,0 +1,12 @@
+# Ignore virtual environments
+venv/
+__pycache__/
+
+# Ignore massive image folders and zip files
+flowers/
+pics/
+*.zip
+
+# Ignore heavy model files (GitHub limit is 100MB)
+*.h5
+*.keras

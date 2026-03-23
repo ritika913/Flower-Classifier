@@ -1,0 +1,7 @@
+﻿venv/
+__pycache__/
+flowers/
+pics/
+*.zip
+*.h5
+*.keras
